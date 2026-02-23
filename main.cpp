@@ -3,6 +3,8 @@
 #include <cstring>
 #include <cctype>
 #include <vector>
+#include <fstream>
+
 
 using namespace std;
 
@@ -13,7 +15,7 @@ struct Student {
     float gpa;
 };
 
-const int TABLE_SIZE = 100;  // You can adjust this
+const int TABLE_SIZE = 100;
 
 int hashFunction(int id) {
     return id % TABLE_SIZE;
@@ -67,6 +69,55 @@ void deleteStudent(vector<vector<Student*>>& table) {
     cout << "No student with that ID found." << endl;
 }
 
+vector<string> loadNames(const char* filename) {
+    vector<string> names;
+    string line;
+    ifstream file(filename);
+
+    while (getline(file, line)) {
+        if (!line.empty())
+            names.push_back(line);
+    }
+    return names;
+}
+
+void generateStudents(vector<vector<Student*>>& table) {
+    int count;
+    cout << "How many random students would you like to generate? ";
+    cin >> count;
+
+    vector<string> firstNames = loadNames("first.txt");
+    vector<string> lastNames = loadNames("last.txt");
+
+    if (firstNames.empty() || lastNames.empty()) {
+        cout << "Error: name files not found or empty." << endl;
+        return;
+    }
+
+    for (int i = 0; i < count; i++) {
+        Student* s = new Student;
+
+        // Pick random names
+        string fn = firstNames[rand() % firstNames.size()];
+        string ln = lastNames[rand() % lastNames.size()];
+
+        strncpy(s->fn, fn.c_str(), 80);
+        strncpy(s->ln, ln.c_str(), 80);
+
+        // Random 6-digit ID
+        s->id = 100000 + rand() % 900000;
+
+        // Random GPA 0.0–4.0
+        s->gpa = (rand() % 401) / 100.0f;
+
+        int index = hashFunction(s->id);
+        table[index].push_back(s);
+    }
+
+    cout << count << " random students generated." << endl;
+}
+
+
 int main() {
     vector<vector<Student*>> table(TABLE_SIZE);
 
@@ -78,6 +129,8 @@ int main() {
         cout << "2 = Print students" << endl;
         cout << "3 = Delete student" << endl;
         cout << "4 = Quit" << endl;
+        cout << "5 = Generate random students" << endl;
+
 
         cin >> choice;
 
@@ -93,6 +146,10 @@ int main() {
         else if (choice == 4) {
             break;
         }
+        else if (choice == 5) {
+            generateStudents(table);
+        }
+
     }
 
     return 0;
